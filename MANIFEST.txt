@@ -1,0 +1,79 @@
+JieTai workspace manifest
+========================
+
+Reorganized: 2026-08-20
+Cleaned: 2026-08-20
+Six-stage layout: 2026-08-20
+Experiment 4/5 multi-domain integration: 2026-08-21
+Experiment 6 parameter tuning and Recall V4.1 Jop rescue: 2026-08-21
+
+Primary roots
+-------------
+Datasets and annotations: datasets/
+Six-stage experiments: experiments/
+Source projects: projects/
+
+Experiment stages
+-----------------
+01  Stereo model comparison: LiteAnyStereo vs IGEV
+02  Initial semantic segmentation baseline
+03  Manual-annotation segmentation training and tests
+04  Mask refinement and final retest
+05  LiteAnyStereo disparity-guided subject extraction and clean point cloud
+06  Multi-domain human-label training, validation, and category routing
+
+Current Experiment 6 outputs
+----------------------------
+Single-model best IoU: experiments/06_multidomain_segmentation/results/
+exp4_exp5_balanced_v2_test_v1/ (balanced V2 + Experiment 5 soft fusion)
+
+Recall-priority: experiments/06_multidomain_segmentation/results/
+bisenetv2_recall_v4_1_jop_rescue/ (V4 + adaptive reflective Jop1 rescue)
+
+Base recall model: experiments/06_multidomain_segmentation/results/
+bisenetv2_recall_v4/ (tuned BiSeNetV2, threshold 0.30 + Experiment 4)
+
+Historical routed recall result: experiments/06_multidomain_segmentation/results/
+exp4_exp5_routed_v3_test_v1/ (routed V3 + Experiment 4/5 recall fusion)
+
+Dataset policy
+--------------
+All physical datasets live below datasets/. Compatibility paths below projects/
+are symbolic links, not copies. rec_img_set/kedu aliases rectified_images_刻度;
+rec_img_set/test/矫正图片 aliases FDJYP-3-rectified_images after byte-level
+verification. The replaced physical duplicates were moved to the system trash.
+
+Model weights
+-------------
+projects/LiteAnyStereo/checkpoints/LiteAnyStereo.pth
+SHA256 ee0c3a0dc1d4b49cbd67edf00079b9993c0fa21f6c19a0eb812fa32f7ec1b9b1
+
+projects/IGEV-plusplus/pretrained_models/igev_rt/sceneflow.pth
+SHA256 7b7b6ac42d51dbc357a4f7fde3f9278c0da9d2128d1f09ce6c20fd3dcbaa9209
+
+experiments/03_manual_segmentation/fdjyp3/results/model_manual/
+bisenetv2_jmp_workpiece_manual_isat_v1_frozen.pb
+SHA256 b1f34a8caf2b4cab9be7a997a979dd1bb058152f771aa39c25bd37eef2bc4bee
+
+experiments/06_multidomain_segmentation/results/bisenetv2_balanced_v2/
+bisenetv2_workpiece_balanced_v2.pb
+SHA256 30a23e3bd61d3474832f9d4ba25e1fe55a3417361514bc5f55a23d6ce0bbe24d
+
+experiments/06_multidomain_segmentation/results/bisenetv2_recall_v4/
+bisenetv2_workpiece_recall_v4.pb
+SHA256 dabf89f010f501563a04fc27dd24b224e242d115dabff5c8196377c0a057f57d
+
+Recall V4 requires foreground probability threshold 0.30 and Experiment 4
+post-processing. The frozen graph final_output node itself uses threshold 0.50.
+
+Notes
+-----
+Regenerable caches, exact duplicate dataset aliases, superseded results, and
+failed/smoke runs were moved to the system trash. Final models, successful
+baselines, formal results, raw datasets, reports, and archives were retained.
+
+The public IGEV RT SceneFlow checkpoint is not the missing project-specific
+checkpoint formerly referenced by the legacy IGEV++ integration.
+
+Foundation Stereo and Jop1 PLY projections are engineering references, not
+dense human ground truth. Consult each report before comparing metrics.

@@ -1,0 +1,3 @@
+left,right,disparity,valid,split,name,disp_scale
+../my_dataset/left/000001.png,../my_dataset/right/000001.png,../my_dataset/disparity/000001.png,../my_dataset/valid/000001.png,train,scene_000001,256
+../my_dataset/left/000002.png,../my_dataset/right/000002.png,../my_dataset/disparity/000002.npy,,val,scene_000002,1

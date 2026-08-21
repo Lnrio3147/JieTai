@@ -1,0 +1,19 @@
+DATASET:
+    NUM_CLASSES: 2
+    CLASS_NAMES: [background, workpiece]
+    IGNORE_INDEX: 255
+    MEAN_VALUE: [0.5, 0.5, 0.5]
+    STD_VALUE: [0.5, 0.5, 0.5]
+MODEL:
+    MODEL_NAME: bisenetv2_jmp_workpiece
+    BISENETV2:
+        GE_EXPAND_RATIO: 6
+        SEMANTIC_CHANNEL_LAMBDA: 0.25
+        SEGHEAD_CHANNEL_EXPAND_RATIO: 2
+SOLVER:
+    WEIGHT_DECAY: 0.0005
+    LOSS_TYPE: cross_entropy
+    OHEM:
+        ENABLE: false
+        SCORE_THRESH: 0.65
+        MIN_SAMPLE_NUMS: 4096

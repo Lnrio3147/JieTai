@@ -1,0 +1,82 @@
+# Local configuration and credentials
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*credentials*
+*secret*
+
+# Python caches and environments
+__pycache__/
+*.py[cod]
+*.so
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.venv/
+venv/
+env/
+
+# IDE and operating-system files
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Build and packaging output
+build/
+dist/
+*.egg-info/
+cmake-build-*/
+CMakeFiles/
+CMakeCache.txt
+
+# Private/raw datasets. Keep only the documentation needed to reproduce them.
+/datasets/*
+!/datasets/README.md
+!/datasets/LiteAnyStereo数据说明_zh-CN.md
+
+# Generated experiment output (reports, scripts, and slides remain versioned).
+/experiments/**/results/
+/experiments/**/outputs/
+/experiments/**/inputs/
+
+# Training/inference artifacts and large numerical output
+*.ckpt
+*.ckpt.*
+*.h5
+*.onnx
+*.pb
+*.pt
+*.pth
+*.tflite
+*.engine
+*.npy
+*.npz
+*.ply
+*.pcd
+*.bin
+*.log
+events.out.tfevents.*
+
+# Archives
+*.7z
+*.rar
+*.tar
+*.tar.gz
+*.tgz
+*.zip
+
+# Workspace compatibility links and upstream run directories
+/projects/tradition_stereo/LLM_FDJYP-3_out
+/projects/tradition_stereo/datasets
+/projects/tradition_stereo/igev_output
+/projects/tradition_stereo/rec_img_set
+/projects/LiteAnyStereo/data/datasets/
+/projects/LiteAnyStereo/runs/
+/projects/bisenetv2-tensorflow/runs/
+/projects/IGEV-plusplus/pretrained_models/
+/projects/LiteAnyStereo/checkpoints/
