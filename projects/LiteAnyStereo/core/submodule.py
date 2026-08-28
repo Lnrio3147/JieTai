@@ -187,6 +187,59 @@ def build_correlation_volume(left_feature, right_feature, max_disp):
     return cost_volume.contiguous()
 
 
+def build_stereo_mask_guidance(
+    left_probability,
+    right_probability,
+    max_disp,
+    output_size,
+):
+    """Build a soft left/right semantic correspondence prior.
+
+    For a rectified stereo pair, a left pixel ``(y, x)`` at disparity ``d``
+    corresponds to right pixel ``(y, x-d)``.  Foreground pixels are therefore
+    encouraged to select disparities that also land on right-view foreground.
+    Background pixels receive a neutral prior of one so the legacy network is
+    unchanged there and can still provide context near the object boundary.
+
+    The returned tensor has shape ``[B, D, H, W]`` and contains probabilities
+    in ``[0, 1]``.  It is intended to be added as ``weight * log(prior)`` to
+    aggregated disparity logits immediately before softmax.
+    """
+
+    if max_disp <= 0:
+        raise ValueError("max_disp must be positive")
+
+    def prepare(value, name):
+        if value is None:
+            raise ValueError(f"{name} is required for mask-guided stereo")
+        if value.ndim == 3:
+            value = value.unsqueeze(1)
+        if value.ndim != 4 or value.shape[1] != 1:
+            raise ValueError(
+                f"{name} must have shape [B,1,H,W] or [B,H,W], got {tuple(value.shape)}"
+            )
+        value = F.interpolate(
+            value.float(), size=output_size, mode="bilinear", align_corners=False
+        )
+        return value.clamp(0.0, 1.0)
+
+    left = prepare(left_probability, "left_probability")
+    right = prepare(right_probability, "right_probability")
+    if left.shape[0] != right.shape[0]:
+        raise ValueError(
+            "Left/right mask batch mismatch: "
+            f"{left.shape[0]} vs {right.shape[0]}"
+        )
+
+    _, _, height, width = left.shape
+    padded_right = F.pad(right, (max_disp - 1, 0, 0, 0))
+    unfolded_right = padded_right.unfold(3, width, 1)
+    shifted_right = torch.flip(unfolded_right, [3]).permute(0, 1, 3, 2, 4)
+    left = left.unsqueeze(2)
+    guidance = (1.0 - left) + left * shifted_right
+    return guidance.squeeze(1).contiguous()
+
+
 def SpatialTransformer_grid(x, y, disp_range_samples):
     bs, channels, height, width = y.size()
     ndisp = disp_range_samples.size()[1]
@@ -217,5 +270,4 @@ def context_upsample(depth_low, up_weights):
     depth = torch.sum(depth_unfold*up_weights, dim=1, keepdim=True)
         
     return depth
-
 

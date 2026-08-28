@@ -7,7 +7,7 @@ from core.models import build_model, load_model_weights
 
 
 # Verify ONNX file with original checkpoints file.
-def verify(ckpt, version, model_size, onnx_file, width, height, max_disp):
+def verify(ckpt, version, model_size, onnx_file, width, height, max_disp, input_layout="nchw"):
     # load models
     ## Original model
     torch.manual_seed(0)
@@ -24,10 +24,18 @@ def verify(ckpt, version, model_size, onnx_file, width, height, max_disp):
     # run models
     ## Original model
     with torch.no_grad():
-        out_torch = model(left, right, max_disp=max_disp, test_mode=True)[0]
+        out_torch = model(left, right, max_disp=max_disp, test_mode=True)
 
     ## ONNX model
-    out_onnx = sess.run(["disparity"], {"left": left.numpy(), "right": right.numpy()})[0]
+    if input_layout == "nhwc":
+        left_onnx = left.permute(0, 2, 3, 1).contiguous().numpy()
+        right_onnx = right.permute(0, 2, 3, 1).contiguous().numpy()
+    else:
+        left_onnx = left.numpy()
+        right_onnx = right.numpy()
+    out_onnx = sess.run(
+        ["disparity"], {"left": left_onnx, "right": right_onnx}
+    )[0]
 
     # compare
     a = out_torch.numpy().astype(np.float64)
@@ -49,6 +57,12 @@ def parse_args():
     parser.add_argument("--width", type=int, default=1248, help="input width, per single image (not left+right combined)")
     parser.add_argument("--height", type=int, default=384, help="input height")
     parser.add_argument("--max_disp", type=int, default=192, help="maximum disparity used by the model")
+    parser.add_argument(
+        "--input_layout",
+        choices=["nchw", "nhwc"],
+        default="nchw",
+        help="layout used by the ONNX input tensors",
+    )
     return parser.parse_args()
  
  
@@ -60,4 +74,5 @@ if __name__ == "__main__":
            onnx_file=args.onnx_file,
            width=args.width,
            height=args.height,
-           max_disp=args.max_disp)
+           max_disp=args.max_disp,
+           input_layout=args.input_layout)

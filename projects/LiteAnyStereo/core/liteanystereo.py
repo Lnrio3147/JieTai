@@ -52,7 +52,19 @@ class LiteAnyStereo(nn.Module):
         up_disp = up_disp.permute(0, 1, 4, 2, 5, 3)
         return up_disp.reshape(N, 1, scale * H, scale * W)
 
-    def forward(self, left, right, max_disp=192, test_mode=False, kd_mode=False):
+    def forward(
+        self,
+        left,
+        right,
+        max_disp=192,
+        test_mode=False,
+        kd_mode=False,
+        left_mask=None,
+        right_mask=None,
+        mask_guidance_weight=0.0,
+    ):
+        if mask_guidance_weight < 0:
+            raise ValueError("mask_guidance_weight must be non-negative")
         left = (2 * (left / 255.0) - 1.0).contiguous()
         right = (2 * (right / 255.0) - 1.0).contiguous()
 
@@ -63,6 +75,16 @@ class LiteAnyStereo(nn.Module):
         cv_3d = self.cost_stem_3d(cost_volume[:,None]).squeeze(1)
 
         cv = self.cost_agg_2d(cv_3d, features_left)
+        if mask_guidance_weight > 0:
+            guidance = build_stereo_mask_guidance(
+                left_mask,
+                right_mask,
+                max_disp // 4,
+                cv.shape[-2:],
+            ).to(device=cv.device, dtype=cv.dtype)
+            cv = cv + float(mask_guidance_weight) * torch.log(
+                guidance.clamp_min(1e-4)
+            )
 
         prob = F.softmax(cv, dim=1)
         disp = disparity_regression(prob, max_disp // 4)

@@ -1,0 +1,5 @@
+artifacts/
+build/
+*.onnx
+*.rknn
+benchmark_*.json

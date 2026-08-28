@@ -6,6 +6,7 @@ import torch.nn as nn
 from core.models import build_model, load_model_weights
 
 import torch.nn.functional as F
+import core.liteanystereo as liteanystereo
 import core.liteanystereov2 as liteanystereov2
 import core.liteanystereov2_H as liteanystereov2_H
 import core.submodule as submodule
@@ -55,23 +56,39 @@ def _build_gwc_volume_fast(refimg_fea, targetimg_fea, maxdisp, num_groups):
 
 class Wrapper(nn.Module):
     """Bakes in max_disp/test_mode so the exported graph only takes (left, right)."""
-    def __init__(self, model, max_disp):
+    def __init__(self, model, max_disp, input_layout="nchw"):
         super().__init__()
         self.model = model
         self.max_disp = max_disp
+        self.input_layout = input_layout
 
     def forward(self, left, right):
+        if self.input_layout == "nhwc":
+            left = left.permute(0, 3, 1, 2).contiguous()
+            right = right.permute(0, 3, 1, 2).contiguous()
         return self.model(left, right, max_disp=self.max_disp, test_mode=True)
 
 
 # Export checkpoint to ONNX file. 
 # - Fix uncompatable functions.
 # - Export with fixed input shape.
-def export(version, model_size, restore_ckpt, width, height, max_disp, output_name, simplify=False):
+def export(
+    version,
+    model_size,
+    restore_ckpt,
+    width,
+    height,
+    max_disp,
+    output_name,
+    simplify=False,
+    input_layout="nchw",
+):
     # Replace functions that not compatable with ONNX export with an equivalent fixed functions.
     submodule.context_upsample = _context_upsample
+    liteanystereo.context_upsample = _context_upsample
     liteanystereov2.context_upsample = _context_upsample
     liteanystereov2_H.context_upsample = _context_upsample
+    liteanystereo.build_correlation_volume = _build_correlation_volume
     liteanystereov2.build_correlation_volume = _build_correlation_volume
     submodule.build_gwc_volume_fast = _build_gwc_volume_fast
     liteanystereov2_H.build_gwc_volume_fast = _build_gwc_volume_fast
@@ -80,10 +97,19 @@ def export(version, model_size, restore_ckpt, width, height, max_disp, output_na
     model = build_model(version, model_size=model_size, max_disp=max_disp)
     checkpoint = torch.load(restore_ckpt, map_location="cpu")
     load_model_weights(model, checkpoint, strict=True)
-    model = Wrapper(model.eval(), max_disp=max_disp).eval()
+    if input_layout not in {"nchw", "nhwc"}:
+        raise ValueError(f"Unsupported input layout: {input_layout}")
+    model = Wrapper(
+        model.eval(), max_disp=max_disp, input_layout=input_layout
+    ).eval()
 
-    left = torch.randint(0, 256, (1, 3, height, width), dtype=torch.float32)
-    right = torch.randint(0, 256, (1, 3, height, width), dtype=torch.float32)
+    input_shape = (
+        (1, 3, height, width)
+        if input_layout == "nchw"
+        else (1, height, width, 3)
+    )
+    left = torch.randint(0, 256, input_shape, dtype=torch.float32)
+    right = torch.randint(0, 256, input_shape, dtype=torch.float32)
     
     torch.onnx.export(
         model, (left, right), output_name,
@@ -120,6 +146,12 @@ def parse_args():
     parser.add_argument("--max_disp", type=int, default=192, help="maximum disparity used by the model")
     parser.add_argument("--output_name", default="liteanystereo.onnx", help="output ONNX file path")
     parser.add_argument("--simplify", action="store_true", help="simplify exported ONNX graph")
+    parser.add_argument(
+        "--input_layout",
+        choices=["nchw", "nhwc"],
+        default="nchw",
+        help="ONNX input layout; NHWC is convenient for RKNN image input",
+    )
     return parser.parse_args()
 
 
@@ -132,4 +164,5 @@ if __name__ == "__main__":
            height=args.height,
            max_disp=args.max_disp,
            output_name=args.output_name,
-           simplify=args.simplify)
+           simplify=args.simplify,
+           input_layout=args.input_layout)

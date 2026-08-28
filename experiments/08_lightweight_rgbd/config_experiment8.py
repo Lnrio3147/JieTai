@@ -1,0 +1,97 @@
+"""Central configuration for Experiment 8.
+
+Image dimensions follow the existing portrait data convention: WIDTH x HEIGHT
+is 576 x 1024, so a PyTorch RGB batch is [B, 3, 1024, 576].
+"""
+
+from __future__ import annotations
+
+from pathlib import Path
+
+
+ROOT = Path(__file__).resolve().parents[2]
+EXPERIMENT_DIR = ROOT / "experiments/08_lightweight_rgbd"
+RESULTS_DIR = EXPERIMENT_DIR / "results"
+DATASET_DIR = ROOT / "datasets/training/workpiece-seg-isat-v2"
+
+EXP7_DIR = ROOT / "experiments/07_rgbd_fusion"
+EXP7_SOURCE_RUN = EXP7_DIR / "results/rgbd_fusion_v1"
+TEACHER_CHECKPOINT = EXP7_SOURCE_RUN / "best.pt"
+EXP7_GEOMETRY_RUN = EXP7_DIR / "results/rgbd_fusion_v1_geometry"
+EXP7_OVERFLOW_RUN = EXP7_DIR / "results/rgbd_fusion_v1_geometry_overflow"
+TEACHER_TARGET_DIR = RESULTS_DIR / "teacher_targets"
+
+BASE_RUN_DIR = RESULTS_DIR / "student_base"
+DISTILLED_RUN_DIR = RESULTS_DIR / "student_distilled"
+COMPARISON_DIR = RESULTS_DIR / "comparison"
+
+MODEL_NAME = "mobilenetv4_conv_small"
+PRETRAINED = True
+IMAGE_WIDTH = 576
+IMAGE_HEIGHT = 1024
+EVALUATION_WIDTH = 288
+EVALUATION_HEIGHT = 512
+RGB_CHANNELS = (32, 64, 96, 960)
+GEOMETRY_CHANNELS = (24, 32, 32, 32)
+DECODER_CHANNELS = (24, 32, 48, 96)
+
+BATCH_SIZE = 4
+EPOCHS = 60
+PATIENCE = 10
+VALIDATE_EVERY = 1
+SNAPSHOT_EVERY = 5
+WORKERS = 4
+LEARNING_RATE = 1e-3
+ENCODER_LEARNING_RATE = 2e-4
+WEIGHT_DECAY = 1e-4
+SEED = 20260823
+BOUNDARY_TOLERANCE = 2
+CATEGORY_BALANCE_POWER = 0.25
+
+TVERSKY_ALPHA = 0.30
+TVERSKY_BETA = 0.70
+BASE_BCE_WEIGHT = 0.35
+BASE_TVERSKY_WEIGHT = 0.55
+BASE_BOUNDARY_WEIGHT = 0.10
+
+DISTILL_HARD_WEIGHT = 0.50
+DISTILL_TEACHER_A_WEIGHT = 0.30
+DISTILL_TEACHER_B_WEIGHT = 0.20
+DISTILL_BOUNDARY_WEIGHT = 0.10
+
+GEOMETRY_GAUSSIAN_SIGMA = 3.0
+GEOMETRY_BINARY_THRESHOLD = 0.60
+GEOMETRY_CLOSING_RADIUS = 6
+GEOMETRY_PRESERVE_HOLE_AREA = 256
+
+# Topology repair after the learned mask.  The light smoothing removes small
+# edge breaks and external-contour filling removes enclosed false holes.  A
+# stronger orthogonal envelope is only enabled for medium-sized structural
+# gaps; very small gaps are normal concavities and very large gaps are too
+# uncertain to reconstruct safely.
+TOPOLOGY_REPAIR = True
+TOPOLOGY_SMOOTH_SIGMA = 2.0
+TOPOLOGY_SMOOTH_THRESHOLD = 0.60
+TOPOLOGY_ENVELOPE_MIN_ADDED_FRACTION = 0.10
+TOPOLOGY_ENVELOPE_MAX_ADDED_FRACTION = 0.30
+TOPOLOGY_ENVELOPE_CLOSING_RADIUS = 7
+
+OVERFLOW_REFERENCE_THRESHOLD = 0.70
+OVERFLOW_SEARCH_START = 0.90
+OVERFLOW_SEARCH_STOP = 0.97
+OVERFLOW_SEARCH_STEP = 0.001
+OVERFLOW_MAX_REFERENCE_AREA_RATIO = 0.80
+OVERFLOW_MIN_REFERENCE_BBOX_FRACTION = 0.90
+OVERFLOW_MAX_STEP_AREA_RATIO = 0.85
+OVERFLOW_MAX_BBOX_CONTRACTION_RATIO = 0.80
+OVERFLOW_MIN_CANDIDATE_AREA_FRACTION = 0.03
+OVERFLOW_CLOSING_RADIUS = 6
+
+TEACHER_A_EROSION_KERNEL = 3
+TEACHER_A_EROSION_ITERATIONS = 1
+THRESHOLD_CANDIDATES = tuple(round(value / 100.0, 2) for value in range(20, 81, 2))
+THRESHOLD_RECALL_FLOOR = 0.98
+
+MAX_SEGMENTER_PARAMS = 7_000_000
+MAX_SEGMENTER_GFLOPS = 30.0
+EXPECTED_RK3588_FPS = 15.0

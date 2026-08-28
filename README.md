@@ -1,6 +1,6 @@
 # JieTai 双目实验工作区
 
-本工作区按当前实验逻辑整理为六个连续阶段。查实验时先进入 `experiments/`，数据、代码和实验产物分别集中在 `datasets/`、`projects/` 和 `experiments/`。
+本工作区按当前实验逻辑整理为十一个连续阶段。查实验时先进入 `experiments/`，数据、代码和实验产物分别集中在 `datasets/`、`projects/` 和 `experiments/`。
 
 ```text
 JieTai/
@@ -11,13 +11,18 @@ JieTai/
 │   ├── 03_manual_segmentation/  # 人工标注训练与跨数据集测试
 │   ├── 04_mask_refinement/      # 修复不合理分割并重新测试
 │   ├── 05_disparity_guided_segmentation/ # 视差引导主体提取与干净点云
-│   └── 06_multidomain_segmentation/ # 多域人工标注训练、验证和类别路由
+│   ├── 06_multidomain_segmentation/ # 多域人工标注训练、验证和类别路由
+│   ├── 07_rgbd_fusion/          # 大型 RGB-D 教师与连续实体约束
+│   ├── 08_lightweight_rgbd/     # 轻量 RGB-D 学生网络
+│   ├── 09_jit_mask_projection/  # JiT Mask 投影消融
+│   ├── 10_segmentation_guided_stereo/ # RGB Mask 引导双目匹配
+│   └── 11_multiview_feedback_reconstruction/ # 多视角融合与反馈
 ├── projects/                    # 工程源码与模型权重
 ├── requirements.txt
 └── MANIFEST.txt
 ```
 
-## 六阶段主线
+## 十一阶段主线
 
 1. `01_stereo_comparison/`：引入 LiteAnyStereo，与原 IGEV 模型在 rec_img_set 和 Jop1 上对比；LAS 训练记录也放在这里。
 2. `02_initial_segmentation/`：直接使用伪标签训练 BiSeNetV2，观察初始分割效果。
@@ -25,6 +30,15 @@ JieTai/
 4. `04_mask_refinement/`：针对孔洞、孤岛和连通域异常修订掩码，再次评价最终效果。
 5. `05_disparity_guided_segmentation/`：比较纯几何、颜色细化、语义掩码与语义概率/视差软融合，输出干净主体视差和点云。
 6. `06_multidomain_segmentation/`：使用 FDJYP3、螺纹、general、scale、Jop1 共 130 张人工外轮廓标注分层训练和验证，保留旧模型强项并建立召回优先的类别路由。
+7. `07_rgbd_fusion/`：以大型 RGB-D 网络建立质量上限，并加入连续实体和溢出救援。
+8. `08_lightweight_rgbd/`：以 MobileNetV4、浅层几何和 EMCAD 构建 RK3588 候选模型。
+9. `09_jit_mask_projection/`：评价 JiT 启发的单步 Mask 投影，作为未超过 Base 的负结果保留。
+10. `10_segmentation_guided_stereo/`：训练不依赖视差的 RGB 左右目分割器，用 Mask 做共同 ROI 和 LiteAnyStereo 代价体软引导。
+11. `11_multiview_feedback_reconstruction/`：对主体点云做 FPFH/RANSAC、GICP、位姿图融合、质量评价和下一视角反馈。
+
+实验 10 的 32 张右目现已完成人工 ISAT 修订并冻结为 15 张验证、17 张测试评价集。
+人工 Mask 证明软引导在 17/17 张测试图上减少目标/背景跨界，但工程参考 EPE 仍变差，
+所以默认部署继续采用原始 LiteAnyStereo 加后处理 Mask，而不是默认开启代价体软引导。
 
 当前实验 5 已完成另外 130 个场景的冻结跨数据集预测，结果入口和可行性结论见 [跨数据集报告](experiments/05_disparity_guided_segmentation/reports/cross_dataset_report.md)。
 

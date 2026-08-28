@@ -1,0 +1,38 @@
+{
+  "sequence_id": "static_workpiece_001",
+  "units": "mm",
+  "voxel_size": 1.0,
+  "reference_cloud": null,
+  "acquisition": {
+    "same_static_object_confirmed": true,
+    "common_calibration_confirmed": true,
+    "calibration_id": "robot_cell_stereo_20260825",
+    "intended_use": "multiview_coverage",
+    "shared_camera_frame": false
+  },
+  "views": [
+    {
+      "id": "view_000",
+      "cloud": "/absolute/path/to/view_000/subject_cloud.ply",
+      "left_image": "/absolute/path/to/view_000/im0.png",
+      "pose_camera_to_world": null,
+      "azimuth_deg": 0.0,
+      "elevation_deg": 20.0
+    },
+    {
+      "id": "view_001",
+      "cloud": "/absolute/path/to/view_001/subject_cloud.ply",
+      "left_image": "/absolute/path/to/view_001/im0.png",
+      "pose_camera_to_world": null,
+      "azimuth_deg": 30.0,
+      "elevation_deg": 20.0
+    }
+  ],
+  "candidate_views": [],
+  "registration": {
+    "all_pairs": false,
+    "loop_closure": true,
+    "min_fitness": 0.2,
+    "max_rmse_factor": 2.0
+  }
+}

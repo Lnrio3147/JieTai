@@ -145,8 +145,21 @@ class LiteAnyStereoV2(nn.Module):
         """Normalize RGB images in 0-255 range using ImageNet statistics."""
         return ((img / 255.0 - self.image_mean) / self.image_std).contiguous()
 
-    def forward(self, left, right, max_disp=192, test_mode=False, kd_mode=False, jetson_mode=False):
+    def forward(
+        self,
+        left,
+        right,
+        max_disp=192,
+        test_mode=False,
+        kd_mode=False,
+        jetson_mode=False,
+        left_mask=None,
+        right_mask=None,
+        mask_guidance_weight=0.0,
+    ):
         del jetson_mode
+        if mask_guidance_weight < 0:
+            raise ValueError("mask_guidance_weight must be non-negative")
         left = self.normalize_image(left)
         right = self.normalize_image(right)
 
@@ -154,6 +167,16 @@ class LiteAnyStereoV2(nn.Module):
         features_right = self.fnet(right)
         cost_volume = build_correlation_volume(features_left[0], features_right[0], max_disp // 4)
         cv = self.cost_agg(cost_volume, features_left)
+        if mask_guidance_weight > 0:
+            guidance = build_stereo_mask_guidance(
+                left_mask,
+                right_mask,
+                max_disp // 4,
+                cv.shape[-2:],
+            ).to(device=cv.device, dtype=cv.dtype)
+            cv = cv + float(mask_guidance_weight) * torch.log(
+                guidance.clamp_min(1e-4)
+            )
 
         prob = F.softmax(cv, dim=1)
         disp = disparity_regression(prob, max_disp // 4)

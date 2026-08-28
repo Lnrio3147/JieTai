@@ -3,14 +3,15 @@ JieTai workspace manifest
 
 Reorganized: 2026-08-20
 Cleaned: 2026-08-20
-Six-stage layout: 2026-08-20
+Eleven-stage layout: 2026-08-25
+Experiment 10 manual right-view evaluation: 2026-08-25
 Experiment 4/5 multi-domain integration: 2026-08-21
 Experiment 6 parameter tuning and Recall V4.1 Jop rescue: 2026-08-21
 
 Primary roots
 -------------
 Datasets and annotations: datasets/
-Six-stage experiments: experiments/
+Eleven-stage experiments: experiments/
 Source projects: projects/
 
 Experiment stages
@@ -21,6 +22,21 @@ Experiment stages
 04  Mask refinement and final retest
 05  LiteAnyStereo disparity-guided subject extraction and clean point cloud
 06  Multi-domain human-label training, validation, and category routing
+07  RGB-D teacher fusion and continuous-object constraints
+08  Lightweight RGB-D student for edge deployment
+09  JiT-inspired mask projection ablation
+10  RGB-only segmentation-guided LiteAnyStereo
+11  Feedback-driven multi-view registration and fusion
+
+Experiment 10 manual right-view evaluation
+------------------------------------------
+Source tasks: datasets/annotations/workpiece-right-isat-v1 (32 ISAT JSON)
+Frozen export: datasets/evaluation/workpiece-right-manual-isat-v1 (15 val / 17 test)
+Annotation manifest SHA256 da996f9e84e1703e36e0d5df1122b338ae26d1accd4394c9a7932a52ca144079
+Right frozen test IoU: left-only RGB 0.8586; pseudo-stereo RGB 0.8560
+Human-mask stereo violation: baseline 0.17396; guided lambda=2 0.14769
+The guided option reduces semantic boundary crossings but worsens the available
+FDJYP-3 engineering-reference EPE, so post-mask remains the deployment default.
 
 Current Experiment 6 outputs
 ----------------------------
